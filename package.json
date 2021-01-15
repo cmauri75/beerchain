@@ -1,0 +1,19 @@
+{
+  "name": "beerchain",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "cmauri@gmail.com",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cmauri75/beerchain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cmauri75/beerchain/issues"
+  },
+  "homepage": "https://github.com/cmauri75/beerchain#readme",
+  "description": ""
+}
