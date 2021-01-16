@@ -1,2 +1,2 @@
-# beerchain
-This project implements a proof of work blockchain that moves BeerCoin
+# birchain
+This project implements a proof of work blockchain that moves BirCoin
