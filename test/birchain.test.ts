@@ -1,5 +1,5 @@
 import 'mocha'
-import * as assert from 'assert';
+import {assert} from 'chai';
 
 import { sha256 } from 'js-sha256';
 import BirChain from "../src/birchain";
@@ -20,33 +20,21 @@ describe('BirCoin', function() {
     it('Block creation ', function() {
         const block0 = bircoin.createNewBlock(0,sha256('0000'),'0000');
 
-        assert.equal(block0.previousBlockHash,sha256('0000'));
         assert.equal(block0.index,1);
         assert.lengthOf(block0.transactions,0);
     });
-    it('Hash generation testing ', function() {
+    it('Proof of work algoritm testing ', function() {
         const block0 = bircoin.createNewBlock(0,sha256('0000'),'0000');
-        const hash0 = bircoin.hashBlock(sha256('0000'), block0, 0);
 
-        assert.equal(hash0, 'e839f8359dc6c84f5408fc79d3cba665c4ec398e540f665dc6b3c1b02bc87567');
+        const pow = bircoin.proofOfWork(sha256('a'),block0);
+        const verify:string = bircoin.hashBlock(block0.previousBlockHash, block0, pow);
+        assert(verify.substring(0,4),'0000');
+        //console.log('nonce is:'+pow);
     });
   });
 });
 
 /*
-console.log ('. Testing proofOfWork algoritm');
-const pow = bircoin.proofOfWork(sha256('a'),block0);
-console.assert('0000' === bircoin.hashBlock(block0.previousBlockHash, block0, pow),'Error on proofOfWork generation');
-
-
-//block creation test
-console.log ('creating first block');
-const newBlock = bircoin.createNewBlock(0,'','');
-console.log('new block hash: '+newBlock.hash);
-
-console.log ('creating first block correcteness');
-console.assert('431bf5c814e384ce9fa40f655f4b94f7f6a8c8504ea4844c30c484ebf03121f1' === newBlock.hash,'Block hash creation error');
-console.assert('' === newBlock.previousBlockHash,'Block creation error');
 
 console.log ('creating transactions and mining');
 bircoin.createNewTransaction(10,'cmauriADDR','fraADDR');
