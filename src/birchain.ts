@@ -4,6 +4,8 @@
 import { sha256 } from 'js-sha256';
 
 class BirChain {
+    private hashLen = 4;
+    private hashCode = '0000';
 
     chain: any[];
     pendingTransactions: any[];
@@ -11,6 +13,9 @@ class BirChain {
      constructor() {
             this.chain = [];
             this.pendingTransactions = [];
+
+            //create an arbitrary genesis file. The unique does not fullfill pow rule
+            this.createNewBlock(0,"0","0");
         }
 
      createNewBlock(nonce:Number, previousBlockHash:string, hash:string) {
@@ -20,7 +25,7 @@ class BirChain {
              timeStamp: Date.now(),
              transactions: this.pendingTransactions,
              nonce: nonce,
-             hash: this.hashBlock(previousBlockHash,this.pendingTransactions,nonce),
+             hash: hash, //this.hashBlock(previousBlockHash,this.pendingTransactions,nonce),
              previousBlockHash: previousBlockHash
          };
 
@@ -57,6 +62,7 @@ class BirChain {
      //it returns the found nonce
      //it's very important that the algoritm is complicate so if a users would like to change a block it should also change all sequent blocks,
      //re-mining all blocks, it should cost an huge amount of energy
+     //enlarging 4 to longer value can result in a much longer computation
      proofOfWork(previousBlockHash:string, currentBlockData:any):number{
         let nonce:number = 0;
         let hash:string = '';
@@ -64,7 +70,7 @@ class BirChain {
             nonce++;
             hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
         }
-        while (hash.substring(0,4) !== "0000" );
+        while (hash.substring(0,this.hashLen) !== this.hashCode);
         return nonce;
      }
 

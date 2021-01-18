@@ -20,16 +20,17 @@ describe('BirCoin', function() {
     it('Block creation ', function() {
         const block0 = bircoin.createNewBlock(0,sha256('0000'),'0000');
 
-        assert.equal(block0.index,1);
+        assert.equal(block0.index,2);
         assert.lengthOf(block0.transactions,0);
     });
     it('Proof of work algoritm testing ', function() {
-        const block0 = bircoin.createNewBlock(0,sha256('0000'),'0000');
 
-        const pow = bircoin.proofOfWork(sha256('a'),block0);
-        const verify:string = bircoin.hashBlock(block0.previousBlockHash, block0, pow);
-        assert(verify.substring(0,4),'0000');
+        const pb = bircoin.getLastBlock();
+        const pow = bircoin.proofOfWork(pb.previousBlockHash,pb);
+        const verify:string = bircoin.hashBlock(pb.previousBlockHash, pb, pow);
         //console.log('nonce is:'+pow);
+        //console.log('verify is:'+verify);
+        assert.equal(verify.substring(0,4),'0000');
     });
   });
 });
@@ -48,8 +49,13 @@ bircoin.createNewTransaction(2,'fraADDR','manuelADDR');
 bircoin.createNewBlock(0,'ZZZZZZZ','XXXXX');
 */
 
-console.log("************************* DEBUG");
-// console.log(bircoin);
+describe('BirCoin', function() {
+  describe('#sha()', function() {
+    it('just logging ', function() {
+        console.log(bircoin);
+    });
+  });
+});
 // console.log("-----");
 // console.log(bircoin.chain[1]);
 // console.log("-----");
