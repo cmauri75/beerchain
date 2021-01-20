@@ -6,10 +6,8 @@ import static org.junit.Assert.assertTrue;
 import lombok.extern.log4j.Log4j2;
 import net.cmauri.chain.support.Block;
 import net.cmauri.chain.support.Transaction;
-import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -44,30 +42,27 @@ public class BirchainTest {
     public void testHashing() {
         Block b = new Block(0, new Date(), getTestListTrans(), 0, "", "");
 
-        Birchain chain = new Birchain("");
-        assertEquals("62fafb5b12e4b57701650c8588d252981397cc0492c2a5c9e651368992c33995", chain.hashBlock("", b, 0));
+        Birchain chain = new Birchain();
+        assertEquals("62fafb5b12e4b57701650c8588d252981397cc0492c2a5c9e651368992c33995", chain.hashBlock( b, 0));
     }
 
     @Test
     public void testCreateNewBlock() {
-        Birchain chain = new Birchain("");
+        Birchain chain = new Birchain();
 
         Block block1 = chain.createNewBlock(62494);
-
         assertEquals(2, block1.getIndex());
         assertEquals(0, block1.getTransactions().size());
-
-        log.debug("bash of new block is {}",chain.getLastBlock().getHash());
     }
 
     @Test
     public void testPowAlg() {
 
-        Birchain chain = new Birchain("");
+        Birchain chain = new Birchain();
 
-        Block pb = chain.getLastBlock();
-        int pow = chain.proofOfWork(pb.getPreviousBlockHash(), pb);
-        String calcHash = chain.hashBlock(pb.getPreviousBlockHash(), pb, pow);
+        Block pb = chain.retreiveLastBlock();
+        int pow = chain.proofOfWork(pb);
+        String calcHash = chain.hashBlock(pb, pow);
         assertTrue(calcHash.startsWith(Birchain.hashCodeStarter));
     }
 
