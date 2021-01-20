@@ -1,11 +1,10 @@
 {
   "name": "beerchain",
   "version": "1.0.0",
-  "main": "dist/index.ts",
+  "main": "src/network.ts",
   "scripts": {
-    "start": "tsc && node dist/index.js",
-    "test": "tsc && mocha",
-    "testjs": "tsc && node src/birchain.test.js"
+    "start": "nodemon --watch 'src/**/*.ts' --ignore 'src/**/*.spec.ts' --exec 'ts-node' src/network.ts\n",
+    "test": "tsc && mocha"
   },
   "author": "cmauri@gmail.com",
   "license": "ISC",
@@ -19,17 +18,22 @@
   "homepage": "https://github.com/cmauri75/beerchain#readme",
   "description": "",
   "dependencies": {
+    "body-parser": "^1.19.0",
+    "@types/express": "^4.17.11",
     "express": "^4.17.1",
-    "js-sha256": "^0.9.0"
+    "js-sha256": "^0.9.0",
+    "request-promise": "^4.2.6",
+    "@types/uuid": "^8.3.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@types/chai": "^4.2.14",
     "@types/mocha": "^8.2.0",
     "@types/node": "^14.14.21",
-    "@types/express": "^4.17.11",
     "chai": "^4.2.0",
     "mocha": "^8.2.1",
     "tslint": "^6.1.3",
-    "typescript": "^4.1.3"
+    "typescript": "^4.1.3",
+    "nodemon": "^2.0.7"
   }
 }

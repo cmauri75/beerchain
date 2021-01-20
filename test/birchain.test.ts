@@ -18,7 +18,7 @@ let bircoin = new BirChain();
 describe('BirCoin', function() {
   describe('#sha()', function() {
     it('Block creation ', function() {
-        const block0 = bircoin.createNewBlock(0,sha256('0000'),'0000');
+        const block0 = bircoin.createNewBlock(133);
 
         assert.equal(block0.index,2);
         assert.lengthOf(block0.transactions,0);
