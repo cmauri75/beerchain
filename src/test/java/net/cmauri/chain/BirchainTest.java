@@ -1,8 +1,5 @@
 package net.cmauri.chain;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import lombok.extern.log4j.Log4j2;
 import net.cmauri.chain.support.Block;
 import net.cmauri.chain.support.Transaction;
@@ -12,6 +9,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static org.junit.Assert.*;
 
 @Log4j2
 public class BirchainTest {
@@ -23,6 +22,16 @@ public class BirchainTest {
         trans.add(t1);
         trans.add(t2);
         return trans;
+    }
+
+    @Test
+    public void testCreationg() {
+        Birchain chain = new Birchain();
+
+        assertNotNull(chain.getBlockList());
+        assertEquals(1, chain.getBlockList().size());
+
+        log.info("Chain: {}",chain.toString());
     }
 
     @Test
@@ -53,6 +62,20 @@ public class BirchainTest {
         Block block1 = chain.createNewBlock(62494);
         assertEquals(2, block1.getIndex());
         assertEquals(0, block1.getTransactions().size());
+
+        assertEquals(2, chain.getChainSize());
+    }
+
+    @Test
+    public void testCreateNewTransaction() {
+        Birchain chain = new Birchain();
+
+        Transaction t1 = getTestListTrans().get(0);
+        assertEquals(2, chain.createNewTransaction(t1.getAmount(),t1.getSender(),t1.getSender()));
+        assertEquals(1, chain.getPendingTransactions().size());
+
+        assertEquals(2, chain.createNewTransaction(getTestListTrans().get(1)));
+        assertEquals(2, chain.getPendingTransactions().size());
     }
 
     @Test

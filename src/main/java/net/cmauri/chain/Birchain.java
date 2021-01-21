@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import net.cmauri.chain.support.Block;
 import net.cmauri.chain.support.Transaction;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -14,18 +15,19 @@ import java.util.List;
 
 @ToString
 @Log4j2
+@Service
 public class Birchain {
 
     //the longer is, the longer is computation
     public static String hashCodeStarter = "0000";
 
     @Getter
-    private List<Block> chain;
+    private List<Block> blockList;
     @Getter
     private List<Transaction> pendingTransactions;
 
     public int getChainSize() {
-        return this.chain.size();
+        return this.blockList.size();
     }
 
     /**
@@ -34,7 +36,7 @@ public class Birchain {
     public Birchain() {
         log.info("Creating chain");
 
-        this.chain = new ArrayList<>();
+        this.blockList = new ArrayList<>();
         this.pendingTransactions = new ArrayList<>();
 
         //create an arbitrary genesis file. The unique does not fullfill pow rule
@@ -70,7 +72,7 @@ public class Birchain {
         //new block is a container of all new pending transactions
         String previousBlockHash = this.retreiveLastBlock() != null ? this.retreiveLastBlock().getHash() : "";
 
-        Block newBlock = new Block(this.chain.size() + 1, new Date(), this.pendingTransactions, nonce, null, previousBlockHash);
+        Block newBlock = new Block(this.blockList.size() + 1, new Date(), this.pendingTransactions, nonce, null, previousBlockHash);
         log.info("Creating block {}",newBlock);
         String hash = hashBlock(newBlock, nonce);
         log.debug("Hash is {}",hash);
@@ -78,13 +80,13 @@ public class Birchain {
 
         //once a new block is created the queue is cleared
         this.pendingTransactions = new ArrayList<>();
-        this.chain.add(newBlock);
+        this.blockList.add(newBlock);
 
         return newBlock;
     }
 
     public Block retreiveLastBlock() {
-        return this.chain.size() > 0 ? this.chain.get(this.chain.size() - 1) : null;
+        return this.blockList.size() > 0 ? this.blockList.get(this.blockList.size() - 1) : null;
     }
 
     /**
