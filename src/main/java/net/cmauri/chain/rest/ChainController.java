@@ -43,13 +43,12 @@ public class ChainController {
     }
 
     @GetMapping("/blockchain")
-    Birchain getChain() {
-        return chain;
-    }
-
-    @GetMapping("/networkNodes")
-    Set<String> listNetworkNodes() {
-        return networkNodes;
+    Map getChain() {
+        Map<String, Object> res = new HashMap();
+        res.put("chain", chain);
+        res.put("currentNodeUrl", currentNodeUrl);
+        res.put("networkNodes", networkNodes);
+        return res;
     }
 
     @PostMapping(value = "/transaction", consumes = {MediaType.APPLICATION_JSON_VALUE})
@@ -123,10 +122,13 @@ public class ChainController {
      */
     @PostMapping("/register-node")
     public String registerNode(@RequestParam String newNodeUrl) {
-        log.info("Going to register: {}", newNodeUrl);
         boolean nodeAlreadyPresent = this.networkNodes.contains(newNodeUrl);
         boolean isCurrentNode = this.currentNodeUrl.equals(newNodeUrl);
-        if (!nodeAlreadyPresent && !isCurrentNode) this.networkNodes.add(newNodeUrl);
+        if (!nodeAlreadyPresent && !isCurrentNode) {
+            log.info("Ok to register: {}", newNodeUrl);
+            this.networkNodes.add(newNodeUrl);
+        }
+        log.info("Done");
         return ("New node registered successfully. Current size is: " + this.networkNodes.size());
     }
 
