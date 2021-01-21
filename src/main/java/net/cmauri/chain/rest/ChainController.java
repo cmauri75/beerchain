@@ -1,6 +1,5 @@
 package net.cmauri.chain.rest;
 
-import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.cmauri.chain.Birchain;
@@ -30,7 +29,7 @@ public class ChainController {
 
     private final Birchain chain;
 
-    private Set<String> networkNodes;
+    private final Set<String> networkNodes;
 
     public ChainController(Birchain chain, RestTemplate restTemplate) {
         log.info("Created ChainController with url: {}", currentNodeUrl);
@@ -43,26 +42,49 @@ public class ChainController {
     }
 
     @GetMapping("/blockchain")
-    Map getChain() {
-        Map<String, Object> res = new HashMap();
+    Map<String, Object> getChain() {
+        Map<String, Object> res = new HashMap<>();
         res.put("chain", chain);
         res.put("currentNodeUrl", currentNodeUrl);
         res.put("networkNodes", networkNodes);
         return res;
     }
 
+    /**
+     * Creates a local transaction.
+     */
     @PostMapping(value = "/transaction", consumes = {MediaType.APPLICATION_JSON_VALUE})
     @ResponseBody
-    String createTransaction(@RequestBody Transaction trans) {
-        int blockIdx = chain.createNewTransaction(trans);
-        return ("Transaction will be added in index " + blockIdx);
+    String createTransaction(@RequestBody Transaction t) {
+        chain.createNewTransaction(t);
+        return ("Transaction will be added in next block");
+    }
+
+    /**
+     * Creates a local transaction and broadcast it to all nodes
+     */
+    @PostMapping(value = "/transaction/broadcast", consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @ResponseBody
+    String createTransactionBroadcast(@RequestBody Transaction t) {
+        Transaction newT = chain.createNewTransaction(t.getAmount(), t.getSender(), t.getRecipient());
+
+        networkNodes.forEach(networkNodeUrl -> {
+            String callUrl = networkNodeUrl + "/transaction";
+            log.info("Broadcasting new transaction to: {}", callUrl);
+
+            HttpEntity<Transaction> request = new HttpEntity<>(newT, getBodyHeader());
+            ResponseEntity<String> res = restTemplate.postForEntity(callUrl, request, String.class);
+            log.info("Res: {}", res.getBody());
+        });
+
+        return ("Transaction will be added in next block");
     }
 
     @GetMapping("/mine")
     public String mine() {
         // i prepare reward from mining than i do the work. block will be validated with my reward inside it
-        int idx = chain.createNewTransaction(new BigDecimal(12.5), "00", "nodeAddr");
-
+        chain.createNewTransaction(new BigDecimal(12.5), "00", "nodeAddr");
+        int idx = chain.retreiveLastBlock().getIndex() + 1;
 
         String previousBlockHash = chain.retreiveLastBlock().getHash();
         Block creatingBlock = new Block(idx, null, chain.getPendingTransactions(), 0, null, previousBlockHash);
@@ -77,14 +99,12 @@ public class ChainController {
 
     /**
      * Register new node in list and broadcast it to all other network nodes
+     * This is a MAIN entrypoint
      */
     @PostMapping("/register-and-broadcast-node")
     public String registerAndBroadcastNode(@RequestParam String newNodeUrl) {
         boolean nodeAlreadyPresent = this.networkNodes.contains(newNodeUrl);
         if (!nodeAlreadyPresent) this.networkNodes.add(newNodeUrl);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         networkNodes.forEach(networkNodeUrl -> {
             String callUrl = networkNodeUrl + "/register-node";
@@ -93,7 +113,7 @@ public class ChainController {
             MultiValueMap<String, String> map = new LinkedMultiValueMap<String, String>();
             map.add("newNodeUrl", newNodeUrl);
 
-            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, getUrlHeader());
 
             ResponseEntity<String> res = restTemplate.postForEntity(callUrl, request, String.class);
             log.info("Res: {}", res.getBody());
@@ -106,7 +126,7 @@ public class ChainController {
 
         map.add("allNetworkNodes", String.join(", ", this.networkNodes).concat(",").concat(currentNodeUrl));
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, getUrlHeader());
 
         ResponseEntity<String> res = restTemplate.postForEntity(callUrl, request, String.class);
 
@@ -116,9 +136,7 @@ public class ChainController {
     /**
      * register the existence of a new node in current list of active nodes
      * Avoid duplicates and self-registering
-     *
-     * @param newNodeUrl
-     * @return
+     * UTILITY point, receive a broadcast call from register-and-broadcast-node
      */
     @PostMapping("/register-node")
     public String registerNode(@RequestParam String newNodeUrl) {
@@ -132,6 +150,12 @@ public class ChainController {
         return ("New node registered successfully. Current size is: " + this.networkNodes.size());
     }
 
+    /**
+     * Align a new node registering all nodes already present in a single call
+     * UTILITY point, receive a broadcast call from register-and-broadcast-node
+     * @param allNetworkNodes
+     * @return
+     */
     @PostMapping("/register-nodes-bulk")
     public String bulkRegisterNode(@RequestParam List<String> allNetworkNodes) {
         allNetworkNodes.forEach(networkNodeUrl -> {
@@ -141,4 +165,21 @@ public class ChainController {
     }
 
 
+    /**
+     * Creates header for call to RequestParam urls
+     */
+    private HttpHeaders getUrlHeader() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        return headers;
+    }
+
+    /**
+     * Creates header for call to RequestBody urls
+     */
+    private HttpHeaders getBodyHeader() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return headers;
+    }
 }

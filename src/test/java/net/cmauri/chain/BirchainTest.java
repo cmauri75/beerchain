@@ -16,8 +16,8 @@ import static org.junit.Assert.*;
 public class BirchainTest {
 
     private static List<Transaction> getTestListTrans() {
-        Transaction t1 = new Transaction(new BigDecimal(10), "CMAURI", "FRA");
-        Transaction t2 = new Transaction(new BigDecimal(10), "FRA", "CMAURI");
+        Transaction t1 = new Transaction("ID1", new BigDecimal(10), "CMAURI", "FRA");
+        Transaction t2 = new Transaction("ID2", new BigDecimal(10), "FRA", "CMAURI");
         List<Transaction> trans = new ArrayList<>(2);
         trans.add(t1);
         trans.add(t2);
@@ -37,7 +37,7 @@ public class BirchainTest {
     @Test
     public void testTransactSerialization() {
         Transaction t = new Transaction(new BigDecimal(10), "CMAURI", "FRA");
-        assertEquals("10 from CMAURI to FRA", t.getpublicRepresentation());
+        assertEquals("10 from CMAURI to FRA", t.getPublicRepresentation());
     }
 
     @Test
@@ -71,11 +71,17 @@ public class BirchainTest {
         Birchain chain = new Birchain();
 
         Transaction t1 = getTestListTrans().get(0);
-        assertEquals(2, chain.createNewTransaction(t1.getAmount(),t1.getSender(),t1.getSender()));
+        Transaction newT = chain.createNewTransaction(t1.getAmount(),t1.getSender(),t1.getRecipient());
+        assertEquals("10 from CMAURI to FRA", newT.getPublicRepresentation());
         assertEquals(1, chain.getPendingTransactions().size());
+        assertNotNull(newT.getId());
+        assertNotEquals("ID1",newT.getId());
 
-        assertEquals(2, chain.createNewTransaction(getTestListTrans().get(1)));
+        Transaction t2 = getTestListTrans().get(1);
+        Transaction newT2 = chain.createNewTransaction(t2);
+        assertEquals("10 from FRA to CMAURI", newT2.getPublicRepresentation());
         assertEquals(2, chain.getPendingTransactions().size());
+        assertEquals("ID2",newT2.getId());
     }
 
     @Test

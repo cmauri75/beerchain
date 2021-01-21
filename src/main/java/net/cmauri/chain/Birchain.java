@@ -47,20 +47,26 @@ public class Birchain {
     }
 
     /**
-     * Creates a transaction and add it to next block
+     * Creates a real transaction and add it to next block
      *
      * @param amount
      * @param sender
      * @param recipient
      * @return number of the block the new transaction will be added to
      */
-    public int createNewTransaction(BigDecimal amount, String sender, String recipient) {
+    public Transaction createNewTransaction(BigDecimal amount, String sender, String recipient) {
         return createNewTransaction(new Transaction(amount, sender, recipient));
     }
 
-    public int createNewTransaction(Transaction newTransaction) {
+    /**
+     * Add an already created transaction to a block
+     * @param newTransaction
+     * @return
+     */
+    public Transaction createNewTransaction(Transaction newTransaction) {
         this.pendingTransactions.add(newTransaction);
-        return this.retreiveLastBlock().getIndex() + 1;
+        return newTransaction;
+        //return this.retreiveLastBlock().getIndex() + 1;
     }
 
     /**
