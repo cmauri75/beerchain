@@ -50,6 +50,12 @@ public class ChainController {
         return res;
     }
 
+    @GetMapping("/clearNodes")
+    String clearNodes() {
+        networkNodes.clear();
+        return "done";
+    }
+
     /**
      * Creates a local transaction.
      */

@@ -3,14 +3,14 @@ package net.cmauri.chain;
 import lombok.extern.log4j.Log4j2;
 import net.cmauri.chain.support.Block;
 import net.cmauri.chain.support.Transaction;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Log4j2
 public class BirchainTest {

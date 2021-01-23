@@ -18,7 +18,7 @@ import java.util.Collections;
 public class Network {
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(Network.class);
-        app.setDefaultProperties(Collections.singletonMap("server.port", args[0]));
+        app.setDefaultProperties(Collections.singletonMap("server.port", args[1]));
         app.run(args);
     }
 
@@ -38,7 +38,7 @@ public class Network {
     public CommandLineRunner CommandLineRunnerBean(ApplicationContext ctx) {
         return (args) -> {
             log.info("Setting post-contruct params");
-            chainController.setCurrentNodeUrl("http://localhost:"+args[0]);
+            chainController.setCurrentNodeUrl(args[0]+":"+args[1]);
         };
     }
 
