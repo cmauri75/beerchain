@@ -70,6 +70,27 @@
 
     <build>
         <plugins>
+            <!-- plugin for running mvn exec:java -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>net.cmauri.chain.Network</mainClass>
+                    <arguments>
+                        <argument>8000</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+
+            <!-- plugin to create an executable all-in-one jar -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -77,26 +98,6 @@
         </plugins>
         <pluginManagement>
             <plugins>
-                <!-- plugin for running mvn exec:java -Dexec.args="8000", deprecated, use
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <version>1.2.1</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>java</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <configuration>
-                        <mainClass>net.cmauri.chain.Network</mainClass>
-                        <arguments>
-                            <argument>8000</argument>
-                        </arguments>
-                    </configuration>
-                </plugin> -->
-
                 <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
                 <plugin>
                     <artifactId>maven-clean-plugin</artifactId>

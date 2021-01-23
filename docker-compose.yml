@@ -4,14 +4,14 @@ services:
   birchain-node1:
     image: birchain:latest
     ports:
-     - "8000:8888"
+     - "8010:8888"
     environment:
       - NODE_URL=http://birchain-node1
 
   birchain-node2:
     image: birchain:latest
     ports:
-      - "8001:8888"
+      - "8011:8888"
     environment:
       - NODE_URL=http://birchain-node2
 

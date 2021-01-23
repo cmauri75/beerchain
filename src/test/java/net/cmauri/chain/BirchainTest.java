@@ -89,7 +89,7 @@ public class BirchainTest {
 
         Birchain chain = new Birchain();
 
-        Block pb = chain.retreiveLastBlock();
+        Block pb = chain.retrieveLastBlock();
         int pow = chain.proofOfWork(pb);
         String calcHash = chain.hashBlock(pb, pow);
         assertTrue(calcHash.startsWith(Birchain.hashCodeStarter));

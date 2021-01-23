@@ -88,11 +88,9 @@ public class ChainController {
 
     @GetMapping("/mine")
     public String mine() {
-        // i prepare reward from mining than i do the work. block will be validated with my reward inside it
-        chain.createNewTransaction(new BigDecimal(12.5), "00", "nodeAddr");
-        int idx = chain.retreiveLastBlock().getIndex() + 1;
+        int idx = chain.retrieveLastBlock().getIndex() + 1;
 
-        String previousBlockHash = chain.retreiveLastBlock().getHash();
+        String previousBlockHash = chain.retrieveLastBlock().getHash();
         Block creatingBlock = new Block(idx, null, chain.getPendingTransactions(), 0, null, previousBlockHash);
         int powNonce = chain.proofOfWork(creatingBlock);
         //String calcHash = chain.hashBlock(creatingBlock, powNonce);
@@ -100,8 +98,42 @@ public class ChainController {
 
         Block newBlock = chain.createNewBlock(powNonce);
 
+        //Broadcast new block to all other nodes
+        networkNodes.forEach(networkNodeUrl -> {
+            String callUrl = networkNodeUrl + "/receive-new-block";
+            HttpEntity<Block> request = new HttpEntity<>(newBlock, getBodyHeader());
+            ResponseEntity<String> res = restTemplate.postForEntity(callUrl, request, String.class);
+            log.debug("got res to newblock {}",res);
+        });
+
+
+        // reward will be added to chain in next block and broadcast to all other nodes
+        Transaction newT = new Transaction(new BigDecimal(12.5), "00", "nodeAddr");
+        this.createTransactionBroadcast(newT);
+
         return "New block mined successfully" + newBlock;
     }
+
+    /**
+     * Receive a new block mined by another node
+     */
+    @PostMapping("/receive-new-block")
+    public String receiveNewBlock(@RequestBody Block newBlock) {
+        Block lastBlock = chain.retrieveLastBlock();
+
+        boolean correctHash = lastBlock.getHash().equals(newBlock.getPreviousBlockHash());
+        boolean correctIndex = lastBlock.getIndex() + 1 == newBlock.getIndex();
+
+        if (correctHash && correctIndex) {
+            chain.addBlock(newBlock);
+            chain.clearPendingTransactions();
+            return "New block received and accepted";
+        } else {
+            return "New block rejected";
+        }
+    }
+
+    ;
 
     /**
      * Register new node in list and broadcast it to all other network nodes
@@ -159,6 +191,7 @@ public class ChainController {
     /**
      * Align a new node registering all nodes already present in a single call
      * UTILITY point, receive a broadcast call from register-and-broadcast-node
+     *
      * @param allNetworkNodes
      * @return
      */

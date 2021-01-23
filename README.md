@@ -29,7 +29,7 @@ Full testable by: <code>mvn test</code>
 
 The web access to Birchain services.
 
-<!--Activable by: <code>mvn exec:java -Dexec.args="8000"</code>-->
+<!--Activable by: <code>mvn exec:java -Dexec.args="http://localhost 8001"</code>-->
 Activable by: <code>java -jar target/birchain*.jar localhost 8000"
 
 ### Registering of nodes

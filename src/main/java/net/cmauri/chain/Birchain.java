@@ -42,7 +42,7 @@ public class Birchain {
         //create an arbitrary genesis file. The unique does not fullfill pow rule
         Block genesys = new Block(1, new Date(), pendingTransactions, 0, null, "");
 
-        log.debug("Blockchain should be created with nonce {}", this.proofOfWork( genesys));
+        log.debug("Blockchain should be created with nonce {}", this.proofOfWork(genesys));
         this.createNewBlock(69165);
     }
 
@@ -60,6 +60,7 @@ public class Birchain {
 
     /**
      * Add an already created transaction to a block
+     *
      * @param newTransaction
      * @return
      */
@@ -71,27 +72,28 @@ public class Birchain {
 
     /**
      * Creates a new block with all pending transactions and hashs it using passed nonce
+     *
      * @param nonce
      * @return
      */
     public Block createNewBlock(int nonce) {
         //new block is a container of all new pending transactions
-        String previousBlockHash = this.retreiveLastBlock() != null ? this.retreiveLastBlock().getHash() : "";
+        String previousBlockHash = this.retrieveLastBlock() != null ? this.retrieveLastBlock().getHash() : "";
 
         Block newBlock = new Block(this.blockList.size() + 1, new Date(), this.pendingTransactions, nonce, null, previousBlockHash);
-        log.info("Creating block {}",newBlock);
+        log.info("Creating block {}", newBlock);
         String hash = hashBlock(newBlock, nonce);
-        log.debug("Hash is {}",hash);
+        log.debug("Hash is {}", hash);
         newBlock.setHash(hash);
 
         //once a new block is created the queue is cleared
-        this.pendingTransactions = new ArrayList<>();
-        this.blockList.add(newBlock);
+        this.clearPendingTransactions();
+        this.addBlock(newBlock);
 
         return newBlock;
     }
 
-    public Block retreiveLastBlock() {
+    public Block retrieveLastBlock() {
         return this.blockList.size() > 0 ? this.blockList.get(this.blockList.size() - 1) : null;
     }
 
@@ -132,5 +134,19 @@ public class Birchain {
         return nonce;
     }
 
+    /**
+     * Adds a new block in the chain
+     *
+     * @param newBlock the block to be added
+     */
+    public void addBlock(Block newBlock) {
+        this.blockList.add(newBlock);
+    }
 
+    /**
+     * Clears all pending transactions
+     */
+    public void clearPendingTransactions() {
+        this.pendingTransactions = new ArrayList<>();
+    }
 }
