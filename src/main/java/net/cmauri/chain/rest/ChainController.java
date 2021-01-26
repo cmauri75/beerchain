@@ -4,6 +4,7 @@ import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import net.cmauri.chain.Birchain;
 import net.cmauri.chain.support.Block;
+import net.cmauri.chain.support.ChainData;
 import net.cmauri.chain.support.Transaction;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Log4j2
 @RestController
@@ -34,20 +36,17 @@ public class ChainController {
     public ChainController(Birchain chain, RestTemplate restTemplate) {
         log.info("Created ChainController with url: {}", currentNodeUrl);
         //autowire by constructor, so chain can be final
-        //chain = new Birchain();
+
         this.chain = chain;
         this.restTemplate = restTemplate;
+        this.networkNodes = new HashSet<>();
 
-        networkNodes = new HashSet<>();
+        chain.init();
     }
 
     @GetMapping("/blockchain")
-    Map<String, Object> getChain() {
-        Map<String, Object> res = new HashMap<>();
-        res.put("chain", chain);
-        res.put("currentNodeUrl", currentNodeUrl);
-        res.put("networkNodes", networkNodes);
-        return res;
+    ChainData getChain() {
+        return new ChainData(chain, currentNodeUrl, networkNodes);
     }
 
     @GetMapping("/clearNodes")
@@ -89,10 +88,9 @@ public class ChainController {
     @GetMapping("/mine")
     public String mine() {
         int idx = chain.retrieveLastBlock().getIndex() + 1;
-
         String previousBlockHash = chain.retrieveLastBlock().getHash();
-        Block creatingBlock = new Block(idx, null, chain.getPendingTransactions(), 0, null, previousBlockHash);
-        int powNonce = chain.proofOfWork(creatingBlock);
+        Block nextBlock = new Block(idx, null, chain.getPendingTransactions(), 0, null, previousBlockHash);
+        int powNonce = chain.proofOfWork(nextBlock);
         //String calcHash = chain.hashBlock(creatingBlock, powNonce);
         //log.info("calcHash {} {} {}",calcHash,idx, this.chain.getChainSize());
 
@@ -103,7 +101,7 @@ public class ChainController {
             String callUrl = networkNodeUrl + "/receive-new-block";
             HttpEntity<Block> request = new HttpEntity<>(newBlock, getBodyHeader());
             ResponseEntity<String> res = restTemplate.postForEntity(callUrl, request, String.class);
-            log.debug("got res to newblock {}",res);
+            log.debug("got res to newblock {}", res);
         });
 
 
@@ -141,6 +139,10 @@ public class ChainController {
      */
     @PostMapping("/register-and-broadcast-node")
     public String registerAndBroadcastNode(@RequestParam String newNodeUrl) {
+
+        ChainData verify = verifyNode(newNodeUrl);
+        if (verify == null) return "Node is not valid";
+
         boolean nodeAlreadyPresent = this.networkNodes.contains(newNodeUrl);
         if (!nodeAlreadyPresent) this.networkNodes.add(newNodeUrl);
 
@@ -168,7 +170,23 @@ public class ChainController {
 
         ResponseEntity<String> res = restTemplate.postForEntity(callUrl, request, String.class);
 
-        return "Done";
+        return "Node added";
+    }
+
+    /**
+     * Check if a node is valid
+     *
+     * @param newNodeUrl
+     * @return
+     */
+    private ChainData verifyNode(String newNodeUrl) {
+        try {
+            ResponseEntity<ChainData> alive = restTemplate.getForEntity(newNodeUrl + "/blockchain", ChainData.class);
+            return alive.getBody();
+        } catch (Exception e) {
+            log.warn("Node {} is invalid, rejecting", newNodeUrl);
+            return null;
+        }
     }
 
     /**
@@ -201,6 +219,39 @@ public class ChainController {
             registerNode(networkNodeUrl);
         });
         return "Done";
+    }
+
+    /**
+     * When invoked a node check all other nodes for their chains, i a longer one is found the node replaces him chain with the longer found
+     *
+     * @return
+     */
+    @GetMapping("/consensus")
+    public String consensus() {
+        networkNodes.add("http://127.0.0.1:8000");
+        //Verify all nodes retreiving his blockchain data, than extrach the list of blocks inside
+        List<Birchain> blockList = networkNodes.stream()
+                .map(url -> verifyNode(url))
+                .filter(chain -> chain != null)
+                .map(chain -> chain.getChain())
+                .collect(Collectors.toList());
+
+        int maxChainLength = chain.getChainSize();
+        Birchain newLongestChain = null;
+
+        for (Birchain chain : blockList) {
+            if (chain.getChainSize() > maxChainLength) {
+                newLongestChain = chain;
+            }
+        }
+
+        if (newLongestChain == null || !Birchain.isValid(newLongestChain)) {
+            return "No new longer valid chain found";
+        }
+
+        chain.setBlockList(newLongestChain.getBlockList());
+        chain.setPendingTransactions(newLongestChain.getPendingTransactions());
+        return "New chain got from remote chain";
     }
 
 

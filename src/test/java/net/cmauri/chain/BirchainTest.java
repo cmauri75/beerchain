@@ -15,6 +15,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Log4j2
 public class BirchainTest {
 
+    Birchain chain = new Birchain();
+
     private static List<Transaction> getTestListTrans() {
         Transaction t1 = new Transaction("ID1", new BigDecimal(10), "CMAURI", "FRA");
         Transaction t2 = new Transaction("ID2", new BigDecimal(10), "FRA", "CMAURI");
@@ -26,7 +28,7 @@ public class BirchainTest {
 
     @Test
     public void testCreationg() {
-        Birchain chain = new Birchain();
+        chain.init();
 
         assertNotNull(chain.getBlockList());
         assertEquals(1, chain.getBlockList().size());
@@ -51,13 +53,13 @@ public class BirchainTest {
     public void testHashing() {
         Block b = new Block(0, new Date(), getTestListTrans(), 0, "", "");
 
-        Birchain chain = new Birchain();
+        chain.init();
         assertEquals("62fafb5b12e4b57701650c8588d252981397cc0492c2a5c9e651368992c33995", chain.hashBlock( b, 0));
     }
 
     @Test
     public void testCreateNewBlock() {
-        Birchain chain = new Birchain();
+        chain.init();
 
         Block block1 = chain.createNewBlock(62494);
         assertEquals(2, block1.getIndex());
@@ -68,7 +70,7 @@ public class BirchainTest {
 
     @Test
     public void testCreateNewTransaction() {
-        Birchain chain = new Birchain();
+        chain.init();
 
         Transaction t1 = getTestListTrans().get(0);
         Transaction newT = chain.createNewTransaction(t1.getAmount(),t1.getSender(),t1.getRecipient());
@@ -86,13 +88,37 @@ public class BirchainTest {
 
     @Test
     public void testPowAlg() {
-
-        Birchain chain = new Birchain();
+        chain.init();
 
         Block pb = chain.retrieveLastBlock();
         int pow = chain.proofOfWork(pb);
         String calcHash = chain.hashBlock(pb, pow);
         assertTrue(calcHash.startsWith(Birchain.hashCodeStarter));
+    }
+
+    @Test
+    public void testVerify() {
+        chain.init();
+
+        Transaction t1 = getTestListTrans().get(0);
+        Transaction newT = chain.createNewTransaction(t1.getAmount(),t1.getSender(),t1.getRecipient());
+
+        String previousBlockHash = chain.retrieveLastBlock().getHash();
+        Block nextBlock = new Block(2, null, chain.getPendingTransactions(), 0, null, previousBlockHash);
+        int powNonce = chain.proofOfWork(nextBlock);
+        chain.createNewBlock(powNonce);
+
+        Transaction newT1 = chain.createNewTransaction(getTestListTrans().get(0));
+        Transaction newT2 = chain.createNewTransaction(getTestListTrans().get(1));
+        previousBlockHash = chain.retrieveLastBlock().getHash();
+        nextBlock = new Block(3, null, chain.getPendingTransactions(), 0, null, previousBlockHash);
+        powNonce = chain.proofOfWork(nextBlock);
+        chain.createNewBlock(powNonce);
+
+        assertTrue(Birchain.isValid(chain));
+
+        chain.getBlockList().get(1).getTransactions().add(t1);
+        assertFalse(Birchain.isValid(chain));
     }
 
 

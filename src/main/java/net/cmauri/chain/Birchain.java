@@ -1,7 +1,6 @@
 package net.cmauri.chain;
 
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 import lombok.extern.log4j.Log4j2;
 import net.cmauri.chain.support.Block;
 import net.cmauri.chain.support.Transaction;
@@ -19,21 +18,21 @@ import java.util.List;
 public class Birchain {
 
     //the longer is, the longer is computation
-    public static String hashCodeStarter = "0000";
+    protected static final String hashCodeStarter = "0000";
 
     @Getter
+    @Setter
     private List<Block> blockList;
+
     @Getter
+    @Setter
     private List<Transaction> pendingTransactions;
 
-    public int getChainSize() {
-        return this.blockList.size();
-    }
 
     /**
      * Creates the chain witch genesys block
      */
-    public Birchain() {
+    public void init() {
         log.info("Creating chain");
 
         this.blockList = new ArrayList<>();
@@ -104,7 +103,7 @@ public class Birchain {
      * @param nonce
      * @return
      */
-    public String hashBlock(Block block, int nonce) {
+    public static String hashBlock(Block block, int nonce) {
         String sData = block.getPreviousBlockHash() + nonce + block.getPublicRepresentation();
         return DigestUtils.sha256Hex(sData);
     }
@@ -123,7 +122,7 @@ public class Birchain {
      * @return the found nonce
      */
     public int proofOfWork(Block currentBlock) {
-        String previousBlockHash = currentBlock.getPreviousBlockHash();
+        //String previousBlockHash = currentBlock.getPreviousBlockHash();
         int nonce = 0;
         String hash;
         do {
@@ -149,4 +148,38 @@ public class Birchain {
     public void clearPendingTransactions() {
         this.pendingTransactions = new ArrayList<>();
     }
+
+    /**
+     * Make a full chain verify
+     *
+     * @param chain to be verified
+     * @return true if and only if it's full valid
+     */
+    public static boolean isValid(Birchain chain) {
+        for (int i = 1; i < chain.getChainSize(); i++) {
+            Block currentBlock = chain.getBlockList().get(i);
+            Block prevBlock = chain.getBlockList().get(i - 1);
+
+            String blockHash = hashBlock(prevBlock, prevBlock.getNonce());
+            if (!blockHash.startsWith(hashCodeStarter)) return false;
+            if (!currentBlock.getPreviousBlockHash().equals(prevBlock.getHash())) return false;
+        }
+
+        Block genesisBlock = chain.getBlockList().get(0);
+        if (genesisBlock.getNonce() != 69165) return false;
+        if (genesisBlock.getPreviousBlockHash().length() > 0) return false;
+        if (!genesisBlock.getHash().startsWith(hashCodeStarter)) return false;
+        if (genesisBlock.getTransactions().size() > 0) return false;
+
+        return true;
+    }
+
+    /**
+     *
+     * @return the number of blocks in the chain
+     */
+    public int getChainSize() {
+        return this.blockList.size();
+    }
+
 }

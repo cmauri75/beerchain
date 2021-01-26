@@ -15,4 +15,10 @@ services:
     environment:
       - NODE_URL=http://birchain-node2
 
+  birchain-node3:
+    image: birchain:latest
+    ports:
+      - "8012:8888"
+    environment:
+      - NODE_URL=http://birchain-node3
 
