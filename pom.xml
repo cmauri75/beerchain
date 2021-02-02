@@ -71,6 +71,14 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Test depencencies for integration test, rest calls -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>spring-web-test-client</artifactId>
+            <version>4.3.3</version>
+            <scope>test</scope>
+        </dependency>
+
 
         <dependency>
             <groupId>org.projectlombok</groupId>

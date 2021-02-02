@@ -49,7 +49,24 @@ public class ChainController {
         return new ChainData(chain, currentNodeUrl, networkNodes);
     }
 
-    @GetMapping("/clearNodes")
+    /**
+     * Restart the chain
+     * @return
+     */
+    @PostMapping("/restart")
+    String restart(@RequestParam boolean clearNet) {
+        log.debug("Clearing blocks. Network erased? {}",clearNet);
+        chain.init();
+        if (clearNet)
+            clearNodes();
+        return "done";
+    }
+
+    /**
+     * Clears the node list
+     * @return
+     */
+    @PostMapping("/clearNodes")
     String clearNodes() {
         networkNodes.clear();
         return "done";
@@ -228,7 +245,6 @@ public class ChainController {
      */
     @GetMapping("/consensus")
     public String consensus() {
-        networkNodes.add("http://127.0.0.1:8000");
         //Verify all nodes retreiving his blockchain data, than extrach the list of blocks inside
         List<Birchain> blockList = networkNodes.stream()
                 .map(url -> verifyNode(url))
